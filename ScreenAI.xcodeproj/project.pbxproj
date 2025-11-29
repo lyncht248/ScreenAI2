@@ -1,0 +1,601 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		44CA60FE2EDB3A4500BA7D1C /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = 44CA60FD2EDB3A4500BA7D1C /* .gitignore */; };
+		44CA61022EDB3A4A00BA7D1C /* README_SECRET_SETUP.md in Resources */ = {isa = PBXBuildFile; fileRef = 44CA61012EDB3A4A00BA7D1C /* README_SECRET_SETUP.md */; };
+		44CA610B2EDB3B1B00BA7D1C /* Secrets.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 44CA610A2EDB3B1400BA7D1C /* Secrets.xcconfig */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		4408C3902EDB13C30083B0B6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4408C37A2EDB13C20083B0B6 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4408C3812EDB13C20083B0B6;
+			remoteInfo = ScreenAI;
+		};
+		4408C39A2EDB13C30083B0B6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4408C37A2EDB13C20083B0B6 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4408C3812EDB13C20083B0B6;
+			remoteInfo = ScreenAI;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		4408C3822EDB13C20083B0B6 /* ScreenAI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ScreenAI.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4408C38F2EDB13C30083B0B6 /* ScreenAITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ScreenAITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		4408C3992EDB13C30083B0B6 /* ScreenAIUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ScreenAIUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		44CA60FD2EDB3A4500BA7D1C /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
+		44CA61012EDB3A4A00BA7D1C /* README_SECRET_SETUP.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README_SECRET_SETUP.md; sourceTree = "<group>"; };
+		44CA610A2EDB3B1400BA7D1C /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		44CA610D2EDB413700BA7D1C /* Exceptions for "ScreenAI" folder in "ScreenAI" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 4408C3812EDB13C20083B0B6 /* ScreenAI */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		4408C3842EDB13C20083B0B6 /* ScreenAI */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				44CA610D2EDB413700BA7D1C /* Exceptions for "ScreenAI" folder in "ScreenAI" target */,
+			);
+			path = ScreenAI;
+			sourceTree = "<group>";
+		};
+		4408C3922EDB13C30083B0B6 /* ScreenAITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = ScreenAITests;
+			sourceTree = "<group>";
+		};
+		4408C39C2EDB13C30083B0B6 /* ScreenAIUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = ScreenAIUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		4408C37F2EDB13C20083B0B6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4408C38C2EDB13C30083B0B6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4408C3962EDB13C30083B0B6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		4408C3792EDB13C20083B0B6 = {
+			isa = PBXGroup;
+			children = (
+				4408C3842EDB13C20083B0B6 /* ScreenAI */,
+				4408C3922EDB13C30083B0B6 /* ScreenAITests */,
+				4408C39C2EDB13C30083B0B6 /* ScreenAIUITests */,
+				4408C3832EDB13C20083B0B6 /* Products */,
+				44CA60FD2EDB3A4500BA7D1C /* .gitignore */,
+				44CA610A2EDB3B1400BA7D1C /* Secrets.xcconfig */,
+				44CA61012EDB3A4A00BA7D1C /* README_SECRET_SETUP.md */,
+			);
+			sourceTree = "<group>";
+		};
+		4408C3832EDB13C20083B0B6 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4408C3822EDB13C20083B0B6 /* ScreenAI.app */,
+				4408C38F2EDB13C30083B0B6 /* ScreenAITests.xctest */,
+				4408C3992EDB13C30083B0B6 /* ScreenAIUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		4408C3812EDB13C20083B0B6 /* ScreenAI */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4408C3A32EDB13C30083B0B6 /* Build configuration list for PBXNativeTarget "ScreenAI" */;
+			buildPhases = (
+				4408C37E2EDB13C20083B0B6 /* Sources */,
+				4408C37F2EDB13C20083B0B6 /* Frameworks */,
+				4408C3802EDB13C20083B0B6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				4408C3842EDB13C20083B0B6 /* ScreenAI */,
+			);
+			name = ScreenAI;
+			packageProductDependencies = (
+			);
+			productName = ScreenAI;
+			productReference = 4408C3822EDB13C20083B0B6 /* ScreenAI.app */;
+			productType = "com.apple.product-type.application";
+		};
+		4408C38E2EDB13C30083B0B6 /* ScreenAITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4408C3A62EDB13C30083B0B6 /* Build configuration list for PBXNativeTarget "ScreenAITests" */;
+			buildPhases = (
+				4408C38B2EDB13C30083B0B6 /* Sources */,
+				4408C38C2EDB13C30083B0B6 /* Frameworks */,
+				4408C38D2EDB13C30083B0B6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4408C3912EDB13C30083B0B6 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				4408C3922EDB13C30083B0B6 /* ScreenAITests */,
+			);
+			name = ScreenAITests;
+			packageProductDependencies = (
+			);
+			productName = ScreenAITests;
+			productReference = 4408C38F2EDB13C30083B0B6 /* ScreenAITests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		4408C3982EDB13C30083B0B6 /* ScreenAIUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4408C3A92EDB13C30083B0B6 /* Build configuration list for PBXNativeTarget "ScreenAIUITests" */;
+			buildPhases = (
+				4408C3952EDB13C30083B0B6 /* Sources */,
+				4408C3962EDB13C30083B0B6 /* Frameworks */,
+				4408C3972EDB13C30083B0B6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4408C39B2EDB13C30083B0B6 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				4408C39C2EDB13C30083B0B6 /* ScreenAIUITests */,
+			);
+			name = ScreenAIUITests;
+			packageProductDependencies = (
+			);
+			productName = ScreenAIUITests;
+			productReference = 4408C3992EDB13C30083B0B6 /* ScreenAIUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		4408C37A2EDB13C20083B0B6 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1630;
+				LastUpgradeCheck = 1630;
+				TargetAttributes = {
+					4408C3812EDB13C20083B0B6 = {
+						CreatedOnToolsVersion = 16.3;
+					};
+					4408C38E2EDB13C30083B0B6 = {
+						CreatedOnToolsVersion = 16.3;
+						TestTargetID = 4408C3812EDB13C20083B0B6;
+					};
+					4408C3982EDB13C30083B0B6 = {
+						CreatedOnToolsVersion = 16.3;
+						TestTargetID = 4408C3812EDB13C20083B0B6;
+					};
+				};
+			};
+			buildConfigurationList = 4408C37D2EDB13C20083B0B6 /* Build configuration list for PBXProject "ScreenAI" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 4408C3792EDB13C20083B0B6;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 4408C3832EDB13C20083B0B6 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				4408C3812EDB13C20083B0B6 /* ScreenAI */,
+				4408C38E2EDB13C30083B0B6 /* ScreenAITests */,
+				4408C3982EDB13C30083B0B6 /* ScreenAIUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		4408C3802EDB13C20083B0B6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				44CA610B2EDB3B1B00BA7D1C /* Secrets.xcconfig in Resources */,
+				44CA61022EDB3A4A00BA7D1C /* README_SECRET_SETUP.md in Resources */,
+				44CA60FE2EDB3A4500BA7D1C /* .gitignore in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4408C38D2EDB13C30083B0B6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4408C3972EDB13C30083B0B6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		4408C37E2EDB13C20083B0B6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4408C38B2EDB13C30083B0B6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4408C3952EDB13C30083B0B6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		4408C3912EDB13C30083B0B6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4408C3812EDB13C20083B0B6 /* ScreenAI */;
+			targetProxy = 4408C3902EDB13C30083B0B6 /* PBXContainerItemProxy */;
+		};
+		4408C39B2EDB13C30083B0B6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4408C3812EDB13C20083B0B6 /* ScreenAI */;
+			targetProxy = 4408C39A2EDB13C30083B0B6 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		4408C3A12EDB13C30083B0B6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 44CA610A2EDB3B1400BA7D1C /* Secrets.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = JWFNTQ7KX8;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		4408C3A22EDB13C30083B0B6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 44CA610A2EDB3B1400BA7D1C /* Secrets.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = JWFNTQ7KX8;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		4408C3A42EDB13C30083B0B6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 44CA610A2EDB3B1400BA7D1C /* Secrets.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JWFNTQ7KX8;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ScreenAI/Info.plist;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = lynch.ScreenAI;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		4408C3A52EDB13C30083B0B6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 44CA610A2EDB3B1400BA7D1C /* Secrets.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JWFNTQ7KX8;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ScreenAI/Info.plist;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = lynch.ScreenAI;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		4408C3A72EDB13C30083B0B6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 44CA610A2EDB3B1400BA7D1C /* Secrets.xcconfig */;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JWFNTQ7KX8;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = lynch.ScreenAITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ScreenAI.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ScreenAI";
+			};
+			name = Debug;
+		};
+		4408C3A82EDB13C30083B0B6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 44CA610A2EDB3B1400BA7D1C /* Secrets.xcconfig */;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JWFNTQ7KX8;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = lynch.ScreenAITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ScreenAI.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ScreenAI";
+			};
+			name = Release;
+		};
+		4408C3AA2EDB13C30083B0B6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 44CA610A2EDB3B1400BA7D1C /* Secrets.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JWFNTQ7KX8;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = lynch.ScreenAIUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = ScreenAI;
+			};
+			name = Debug;
+		};
+		4408C3AB2EDB13C30083B0B6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 44CA610A2EDB3B1400BA7D1C /* Secrets.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = JWFNTQ7KX8;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = lynch.ScreenAIUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = ScreenAI;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		4408C37D2EDB13C20083B0B6 /* Build configuration list for PBXProject "ScreenAI" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4408C3A12EDB13C30083B0B6 /* Debug */,
+				4408C3A22EDB13C30083B0B6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4408C3A32EDB13C30083B0B6 /* Build configuration list for PBXNativeTarget "ScreenAI" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4408C3A42EDB13C30083B0B6 /* Debug */,
+				4408C3A52EDB13C30083B0B6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4408C3A62EDB13C30083B0B6 /* Build configuration list for PBXNativeTarget "ScreenAITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4408C3A72EDB13C30083B0B6 /* Debug */,
+				4408C3A82EDB13C30083B0B6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4408C3A92EDB13C30083B0B6 /* Build configuration list for PBXNativeTarget "ScreenAIUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4408C3AA2EDB13C30083B0B6 /* Debug */,
+				4408C3AB2EDB13C30083B0B6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 4408C37A2EDB13C20083B0B6 /* Project object */;
+}
