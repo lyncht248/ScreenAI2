@@ -23,6 +23,7 @@ struct SettingsView: View {
                                 .fill(blockedStatus == 1 ? Color.red.opacity(0.15) : Color.green.opacity(0.15))
                         )
                 }
+                .listRowBackground(Color.oatLighter)
             } header: {
                 Text("Screen Time")
             } footer: {
@@ -36,6 +37,7 @@ struct SettingsView: View {
                         ProgressView()
                         Spacer()
                     }
+                    .listRowBackground(Color.oatLighter)
                 } else if let profile = profile {
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
@@ -50,6 +52,7 @@ struct SettingsView: View {
                         Spacer()
                     }
                     .padding(.vertical, 4)
+                    .listRowBackground(Color.oatLighter)
                 }
             } header: {
                 Text("Profile")
@@ -70,10 +73,13 @@ struct SettingsView: View {
                     }
                 }
                 .disabled(isSigningOut)
+                .listRowBackground(Color.oatLighter)
             }
         }
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.inline)
+        .scrollContentBackground(.hidden)
+        .background(Color.oatBackground)
         .task {
             await loadProfile()
         }

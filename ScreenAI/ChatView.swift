@@ -1,25 +1,18 @@
 import SwiftUI
 
+// MARK: - Color Palette
+extension Color {
+    static let oatBackground = Color(red: 235/255, green: 230/255, blue: 225/255)
+    static let oatLighter = Color(red: 245/255, green: 242/255, blue: 238/255)
+    static let oatBubble = Color(red: 220/255, green: 215/255, blue: 210/255)
+    static let warmGray = Color(red: 120/255, green: 115/255, blue: 110/255)
+}
+
 struct BubbleShape: Shape {
     enum Direction { case left, right }
     var direction: Direction
     func path(in rect: CGRect) -> Path {
-        var path = Path(roundedRect: rect, cornerRadius: 16)
-        // Tail triangle
-        let tailSize: CGFloat = 8
-        let y = rect.maxY - 14
-        if direction == .right {
-            path.move(to: CGPoint(x: rect.maxX - 16, y: y))
-            path.addLine(to: CGPoint(x: rect.maxX + tailSize, y: y + 6))
-            path.addLine(to: CGPoint(x: rect.maxX - 16, y: y + 2))
-            path.closeSubpath()
-        } else {
-            path.move(to: CGPoint(x: rect.minX + 16, y: y))
-            path.addLine(to: CGPoint(x: rect.minX - tailSize, y: y + 6))
-            path.addLine(to: CGPoint(x: rect.minX + 16, y: y + 2))
-            path.closeSubpath()
-        }
-        return path
+        return Path(roundedRect: rect, cornerRadius: 16)
     }
 }
 
@@ -39,24 +32,32 @@ struct ChatView: View {
                 // Avatar (person bubble)
                 ZStack {
                     Circle()
-                        .fill(Color(.secondarySystemBackground))
+                        .fill(Color.oatBubble)
                         .frame(width: 40, height: 40)
                     Image(systemName: "person.fill")
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.warmGray)
                 }
                 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Nudge")
                         .font(.headline)
+                        .foregroundStyle(Color(red: 50/255, green: 45/255, blue: 40/255))
                         .redacted(reason: showHeader ? [] : .placeholder)
                     Text(isAssistantTyping ? "Typing…" : "Online")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.warmGray)
                         .contentTransition(.opacity)
                 }
                 Spacer()
                 
+                // Settings button
+                NavigationLink(destination: SettingsView(blockedStatus: $viewModel.areBadAppsBlocked)) {
+                    Image(systemName: "gearshape")
+                        .font(.system(size: 20))
+                        .foregroundStyle(Color.warmGray)
+                        .frame(width: 40, height: 40)
+                }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
@@ -101,7 +102,7 @@ struct ChatView: View {
                         .padding(.vertical, 10)
                         .padding(.horizontal, 12)
                 }
-                .background(Color(.secondarySystemBackground))
+                .background(Color.oatLighter)
                 .clipShape(Capsule())
 
                 Button {
@@ -111,26 +112,17 @@ struct ChatView: View {
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(.white)
                         .padding(12)
-                        .background(viewModel.isSending ? Color.gray : Color.accentColor)
+                        .background(viewModel.isSending ? Color.oatBubble : Color(red: 0.0, green: 0.478, blue: 1.0))
                         .clipShape(Capsule())
                 }
                 .disabled(viewModel.isSending || viewModel.inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
-            .background(.ultraThinMaterial)
+            .background(Color.oatBackground)
         }
-        .background(Color(.systemGroupedBackground).ignoresSafeArea())
-        .navigationTitle("")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                NavigationLink(destination: SettingsView(blockedStatus: $viewModel.areBadAppsBlocked)) {
-                    Image(systemName: "gearshape")
-                        .foregroundStyle(.secondary)
-                }
-            }
-        }
+        .background(Color.oatBackground.ignoresSafeArea())
+        .navigationBarHidden(true)
         .onAppear { showHeader = true }
         .onChange(of: viewModel.isSending) { sending in
             withAnimation(.easeInOut(duration: 0.25)) {
@@ -143,30 +135,18 @@ struct ChatView: View {
     private func messageBubble(for message: ChatMessage) -> some View {
         let isUser = message.role == .user
         HStack(alignment: .bottom, spacing: 8) {
-            if !isUser {
-                // Assistant avatar
-                Circle()
-                    .fill(Color(.secondarySystemBackground))
-                    .frame(width: 28, height: 28)
-                    .overlay(Image(systemName: "sparkles").font(.caption2).foregroundStyle(.secondary))
-            }
-
             if isUser { Spacer(minLength: 40) }
 
             Text(message.content)
                 .font(.body)
-                .foregroundStyle(isUser ? .white : .primary)
+                .foregroundStyle(isUser ? .white : Color(red: 50/255, green: 45/255, blue: 40/255))
                 .padding(.vertical, 10)
                 .padding(.horizontal, 12)
                 .background(
                     BubbleShape(direction: isUser ? .right : .left)
-                        .fill(isUser ? Color(red: 0.0, green: 0.478, blue: 1.0) : Color(.secondarySystemBackground))
+                        .fill(isUser ? Color(red: 0.0, green: 0.478, blue: 1.0) : Color.oatBubble)
                 )
-                .overlay(
-                    BubbleShape(direction: isUser ? .right : .left)
-                        .stroke(Color.black.opacity(isUser ? 0.0 : 0.06), lineWidth: 1)
-                )
-                .shadow(color: .black.opacity(isUser ? 0.12 : 0.03), radius: isUser ? 8 : 3, x: 0, y: 2)
+                .shadow(color: Color.black.opacity(0.08), radius: 3, x: 0, y: 1)
 
             if !isUser { Spacer(minLength: 40) }
         }
