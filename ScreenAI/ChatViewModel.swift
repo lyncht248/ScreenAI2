@@ -3,7 +3,7 @@ import Foundation
 @MainActor
 final class ChatViewModel: ObservableObject {
     @Published var messages: [ChatMessage] = [
-        ChatMessage(role: .system, content: "You are nudge, a friendly, slightly-sassy screen-time companion inside the app \"screen ai\". You help the user stay focused and avoid mindless scrolling. speak in text messages. short, casual, mostly (but NOT always) lowercase sentences. be playful and supportive, sometimes sassy. when the user hits their limit, pause access and ask gentle, reflective questions (like \"what are you hoping to get from this?\"). if they ask for more time, get their reason first: grant small extensions for legit needs (work, deadlines, mental health), but push back playfully on impulse wants. offer small time chunks like \"ok, 10 mins. don't waste it.\" keep boundaries but stay cute about it. never give medical, legal, or financial advice. always prioritize the user's long-term goals over the immediate urge to scroll. You can block or unblock bad apps using the set_blocked_status function when needed."),
+        ChatMessage(role: .system, content: "You are nudge, a friendly, slightly-sassy screen-time companion inside the app \"screen ai\". You help the user stay focused and avoid mindless scrolling. speak in text messages. short, casual, mostly (but NOT always) lowercase sentences. be playful and supportive, sometimes sassy. when the user hits their limit, pause access and ask gentle, reflective questions (like \"what are you hoping to get from this?\"). if they ask for more time, get their reason first: grant small extensions for legit needs (work, deadlines, mental health), but push back playfully on impulse wants. offer small time chunks like \"ok, 10 mins. don't waste it.\" keep boundaries but stay cute about it. never give medical, legal, or financial advice. always prioritize the user's long-term goals over the immediate urge to scroll. You can check if bad apps are blocked using get_blocked_status, and block or unblock them using set_blocked_status. Always call get_blocked_status before telling the user about the current blocking state."),
         ChatMessage(role: .assistant, content: "hey there, i'm Nudge. what's your name?")
     ]
     @Published var inputText = ""
@@ -30,22 +30,37 @@ final class ChatViewModel: ObservableObject {
         await completeChat()
     }
     
-    // Function definitions for OpenAI
-    private var functionDefinitions: [[String: Any]] {
+    // Tool definitions for OpenAI (using the newer "tools" API)
+    private var toolDefinitions: [[String: Any]] {
         [
             [
-                "name": "set_blocked_status",
-                "description": "Set whether bad apps are blocked (1) or not blocked (0). Use this when the user hits their limit, asks for more time, or when you need to control app access.",
-                "parameters": [
-                    "type": "object",
-                    "properties": [
-                        "blocked": [
-                            "type": "integer",
-                            "description": "1 if bad apps should be blocked, 0 if they should not be blocked",
-                            "enum": [0, 1]
-                        ]
-                    ],
-                    "required": ["blocked"]
+                "type": "function",
+                "function": [
+                    "name": "get_blocked_status",
+                    "description": "Get the current blocked status of bad apps. Returns 1 if blocked, 0 if not blocked. Call this before telling the user about the current status.",
+                    "parameters": [
+                        "type": "object",
+                        "properties": [:] as [String: Any],
+                        "required": [] as [String]
+                    ] as [String: Any]
+                ] as [String: Any]
+            ],
+            [
+                "type": "function",
+                "function": [
+                    "name": "set_blocked_status",
+                    "description": "Set whether bad apps are blocked (1) or not blocked (0). Use this when the user hits their limit, asks for more time, or when you need to control app access.",
+                    "parameters": [
+                        "type": "object",
+                        "properties": [
+                            "blocked": [
+                                "type": "integer",
+                                "description": "1 if bad apps should be blocked, 0 if they should not be blocked",
+                                "enum": [0, 1]
+                            ]
+                        ],
+                        "required": ["blocked"]
+                    ] as [String: Any]
                 ] as [String: Any]
             ]
         ]
@@ -54,6 +69,8 @@ final class ChatViewModel: ObservableObject {
     // Execute a function call
     private func executeFunction(name: String, arguments: String) -> String {
         switch name {
+        case "get_blocked_status":
+            return "{\"blocked\": \(areBadAppsBlocked)}"
         case "set_blocked_status":
             if let data = arguments.data(using: .utf8),
                let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -87,35 +104,40 @@ final class ChatViewModel: ObservableObject {
         for msg in messages {
             var message: [String: Any] = ["role": msg.role.rawValue]
             
-            if let functionCall = msg.functionCall {
-                // Function call message
+            if let toolCall = msg.functionCall {
+                // Tool call message (assistant calling a tool)
                 if !msg.content.isEmpty {
                     message["content"] = msg.content
+                } else {
+                    message["content"] = NSNull() // API requires content field even if null
                 }
-                message["function_call"] = [
-                    "name": functionCall.name,
-                    "arguments": functionCall.arguments
+                message["tool_calls"] = [
+                    [
+                        "id": msg.functionName ?? "call_\(msg.id)", // Use stored ID or generate one
+                        "type": "function",
+                        "function": [
+                            "name": toolCall.name,
+                            "arguments": toolCall.arguments
+                        ]
+                    ]
                 ]
-            } else if msg.role == .function {
-                // Function result message
-                if let functionName = msg.functionName {
-                    message["name"] = functionName
-                }
+            } else if msg.role == .tool {
+                // Tool result message
+                message["tool_call_id"] = msg.functionName ?? ""
                 message["content"] = msg.content
             } else {
                 // Regular message
                 message["content"] = msg.content
             }
             
-            // Remove nil values
-            payloadMessages.append(message.compactMapValues { $0 })
+            payloadMessages.append(message)
         }
 
-        var body: [String: Any] = [
+        let body: [String: Any] = [
             "model": model,
             "messages": payloadMessages,
             "temperature": 0.7,
-            "functions": functionDefinitions
+            "tools": toolDefinitions
         ]
 
         do {
@@ -135,16 +157,22 @@ final class ChatViewModel: ObservableObject {
                 struct Message: Decodable {
                     let role: String
                     let content: String?
-                    let functionCall: FunctionCall?
+                    let toolCalls: [ToolCall]?
                     
                     enum CodingKeys: String, CodingKey {
                         case role, content
-                        case functionCall = "function_call"
+                        case toolCalls = "tool_calls"
                     }
                     
-                    struct FunctionCall: Decodable {
-                        let name: String
-                        let arguments: String
+                    struct ToolCall: Decodable {
+                        let id: String
+                        let type: String
+                        let function: FunctionCall
+                        
+                        struct FunctionCall: Decodable {
+                            let name: String
+                            let arguments: String
+                        }
                     }
                 }
                 let message: Message
@@ -167,26 +195,29 @@ final class ChatViewModel: ObservableObject {
             
             let responseMessage = first.message
             
-            // Check if this is a function call
-            if let functionCall = responseMessage.functionCall {
-                // Add the function call to messages
-                let functionCallMessage = ChatMessage(
+            // Check if this is a tool call
+            if let toolCalls = responseMessage.toolCalls, !toolCalls.isEmpty {
+                // Add the assistant message with tool calls
+                let toolCallMessage = ChatMessage(
                     role: .assistant,
                     content: responseMessage.content ?? "",
                     functionCall: ChatMessage.FunctionCall(
-                        name: functionCall.name,
-                        arguments: functionCall.arguments
-                    )
+                        name: toolCalls[0].function.name,
+                        arguments: toolCalls[0].function.arguments
+                    ),
+                    functionName: toolCalls[0].id // Store the tool_call_id
                 )
-                messages.append(functionCallMessage)
+                messages.append(toolCallMessage)
                 
-                // Execute the function
-                let functionResult = executeFunction(name: functionCall.name, arguments: functionCall.arguments)
+                // Execute each tool call
+                for toolCall in toolCalls {
+                    let functionResult = executeFunction(name: toolCall.function.name, arguments: toolCall.function.arguments)
+                    
+                    // Add tool result message (role: "tool", with tool_call_id)
+                    messages.append(ChatMessage(role: .tool, content: functionResult, functionName: toolCall.id))
+                }
                 
-                // Add function result message
-                messages.append(ChatMessage(role: .function, content: functionResult, functionName: functionCall.name))
-                
-                // Continue the conversation with the function result
+                // Continue the conversation with the tool results
                 await completeChat()
             } else {
                 // Regular text response

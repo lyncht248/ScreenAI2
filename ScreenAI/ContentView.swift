@@ -11,15 +11,6 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             ChatView(apiKey: AppConfig.openAIAPIKey, model: AppConfig.openAIModel)
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        NavigationLink(destination: SettingsView()) {
-                            Image(systemName: "gearshape")
-                        }
-                    }
-                }
-                .navigationTitle("")
-                .navigationBarTitleDisplayMode(.inline)
         }
     }
 }

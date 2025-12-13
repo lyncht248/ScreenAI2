@@ -67,7 +67,7 @@ struct ChatView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 10) {
-                        ForEach(viewModel.messages.filter { $0.role != .system }) { message in
+                        ForEach(viewModel.messages.filter { $0.role != .system && $0.role != .tool && $0.functionCall == nil }) { message in
                             messageBubble(for: message)
                                 .id(message.id)
                         }
@@ -76,7 +76,7 @@ struct ChatView: View {
                     .padding(.vertical, 12)
                 }
                 .onChange(of: viewModel.messages) { _ in
-                    if let lastID = viewModel.messages.filter({ $0.role != .system }).last?.id {
+                    if let lastID = viewModel.messages.filter({ $0.role != .system && $0.role != .tool && $0.functionCall == nil }).last?.id {
                         withAnimation(.easeOut(duration: 0.25)) {
                             proxy.scrollTo(lastID, anchor: .bottom)
                         }
@@ -123,6 +123,14 @@ struct ChatView: View {
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink(destination: SettingsView(blockedStatus: $viewModel.areBadAppsBlocked)) {
+                    Image(systemName: "gearshape")
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
         .onAppear { showHeader = true }
         .onChange(of: viewModel.isSending) { sending in
             withAnimation(.easeInOut(duration: 0.25)) {

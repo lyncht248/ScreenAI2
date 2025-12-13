@@ -15,7 +15,7 @@ struct ChatMessage: Identifiable, Equatable {
     }
 
     enum Role: String {
-        case system, user, assistant, function
+        case system, user, assistant, tool
     }
     
     struct FunctionCall: Equatable {
