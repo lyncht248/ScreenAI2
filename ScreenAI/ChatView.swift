@@ -67,7 +67,7 @@ struct ChatView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 10) {
-                        ForEach(viewModel.messages) { message in
+                        ForEach(viewModel.messages.filter { $0.role != .system }) { message in
                             messageBubble(for: message)
                                 .id(message.id)
                         }
@@ -76,7 +76,7 @@ struct ChatView: View {
                     .padding(.vertical, 12)
                 }
                 .onChange(of: viewModel.messages) { _ in
-                    if let lastID = viewModel.messages.last?.id {
+                    if let lastID = viewModel.messages.filter({ $0.role != .system }).last?.id {
                         withAnimation(.easeOut(duration: 0.25)) {
                             proxy.scrollTo(lastID, anchor: .bottom)
                         }
