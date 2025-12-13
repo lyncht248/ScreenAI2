@@ -92,18 +92,26 @@ final class ChatViewModel: ObservableObject {
                 
                 // Load blocked status from conversation metadata
                 if let metadata = latestConversation.metadata {
+                    print("📦 Loaded conversation metadata: \(metadata)")
                     // Extract blocked_status from AnyJSON
                     for (key, value) in metadata {
+                        print("📦 Metadata key: \(key), value: \(value)")
                         if key == "blocked_status" {
                             if case .integer(let blocked) = value {
+                                print("✅ Loaded blocked_status (integer): \(blocked)")
                                 self.areBadAppsBlocked = blocked
                             } else if case .string(let blockedStr) = value,
                                       let blocked = Int(blockedStr) {
+                                print("✅ Loaded blocked_status (string): \(blocked)")
                                 self.areBadAppsBlocked = blocked
+                            } else {
+                                print("⚠️ blocked_status has unexpected type: \(value)")
                             }
                             break
                         }
                     }
+                } else {
+                    print("📦 No metadata found in conversation")
                 }
             } else {
                 // Create new conversation
@@ -122,6 +130,40 @@ final class ChatViewModel: ObservableObject {
         } catch {
             print("Error loading conversation: \(error)")
             // Continue with local messages if loading fails
+        }
+    }
+    
+    /// Clear the current conversation and start fresh
+    func clearConversation() async {
+        do {
+            // Delete the current conversation from the database
+            if let convId = conversationId {
+                try await chatService.deleteConversation(id: convId)
+                print("🗑️ Deleted conversation: \(convId)")
+            }
+            
+            // Reset local state
+            conversationId = nil
+            areBadAppsBlocked = 0
+            messages = [systemMessage, initialGreeting]
+            errorMessage = nil
+            
+            // Create a new conversation
+            conversationId = try await chatService.createConversation()
+            print("✨ Created new conversation: \(conversationId?.uuidString ?? "nil")")
+            
+            // Save initial greeting
+            if let convId = conversationId {
+                _ = try await chatService.saveMessage(
+                    conversationId: convId,
+                    role: initialGreeting.role.rawValue,
+                    content: initialGreeting.content,
+                    sequenceOrder: 1
+                )
+            }
+        } catch {
+            print("Error clearing conversation: \(error)")
+            errorMessage = "Failed to clear conversation"
         }
     }
 
@@ -206,13 +248,16 @@ final class ChatViewModel: ObservableObject {
     
     // Execute a function call
     private func executeFunction(name: String, arguments: String) -> String {
+        print("🔧 Executing function: \(name) with arguments: \(arguments)")
         switch name {
         case "get_blocked_status":
+            print("🔧 get_blocked_status returning: \(areBadAppsBlocked)")
             return "{\"blocked\": \(areBadAppsBlocked)}"
         case "set_blocked_status":
             if let data = arguments.data(using: .utf8),
                let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                let blocked = json["blocked"] as? Int {
+                print("🚫 set_blocked_status: Setting blocked to \(blocked)")
                 areBadAppsBlocked = blocked
                 
                 // Persist blocked status to conversation metadata
@@ -223,14 +268,16 @@ final class ChatViewModel: ObservableObject {
                                 id: convId,
                                 metadata: ["blocked_status": blocked]
                             )
+                            print("✅ Saved blocked_status to conversation metadata")
                         } catch {
-                            print("Warning: Failed to save blocked status: \(error)")
+                            print("❌ Failed to save blocked status: \(error)")
                         }
                     }
                 }
                 
                 return "{\"status\": \"success\", \"blocked\": \(blocked)}"
             }
+            print("❌ set_blocked_status: Invalid arguments")
             return "{\"status\": \"error\", \"message\": \"Invalid arguments\"}"
         default:
             return "{\"status\": \"error\", \"message\": \"Unknown function\"}"
@@ -298,12 +345,14 @@ final class ChatViewModel: ObservableObject {
             let toolCallsArray = messageDict["tool_calls"] as? [[String: Any]]
             
             // Check if this is a tool call
+            print("🤖 OpenAI response - content: \(content ?? "nil"), tool_calls: \(toolCallsArray?.count ?? 0)")
             if let toolCalls = toolCallsArray, !toolCalls.isEmpty,
                let firstToolCall = toolCalls.first,
                let toolCallId = firstToolCall["id"] as? String,
                let functionDict = firstToolCall["function"] as? [String: Any],
                let functionName = functionDict["name"] as? String,
                let functionArgs = functionDict["arguments"] as? String {
+                print("🤖 Received tool call: \(functionName) with args: \(functionArgs)")
                 
                 // Add the tool call to messages
                 let toolCallMessage = ChatMessage(

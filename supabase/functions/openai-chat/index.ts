@@ -98,6 +98,13 @@ serve(async (req) => {
 
     // Parse request body
     const requestBody: RequestBody = await req.json();
+    
+    // Debug logging
+    console.log("📥 Received request body keys:", Object.keys(requestBody));
+    console.log("📥 Has tools:", !!requestBody.tools, "count:", requestBody.tools?.length ?? 0);
+    if (requestBody.tools) {
+      console.log("📥 Tools:", JSON.stringify(requestBody.tools).substring(0, 500));
+    }
 
     // Validate request body
     if (!requestBody.messages || !Array.isArray(requestBody.messages)) {
@@ -118,11 +125,18 @@ serve(async (req) => {
     };
     
     // Support both tools (newer API) and functions (legacy)
-    if (requestBody.tools) {
+    if (requestBody.tools && requestBody.tools.length > 0) {
       openAIRequest.tools = requestBody.tools;
-    } else if (requestBody.functions) {
+      console.log("✅ Added tools to OpenAI request");
+    } else if (requestBody.functions && requestBody.functions.length > 0) {
       openAIRequest.functions = requestBody.functions;
+      console.log("✅ Added functions to OpenAI request");
+    } else {
+      console.log("⚠️ No tools or functions in request");
     }
+    
+    console.log("📤 OpenAI request keys:", Object.keys(openAIRequest));
+    console.log("📤 OpenAI request has tools:", !!openAIRequest.tools);
 
     // Call OpenAI API
     const openAIResponse = await fetch(OPENAI_API_URL, {
@@ -150,6 +164,13 @@ serve(async (req) => {
     }
 
     const openAIData = await openAIResponse.json();
+    
+    // Debug: Log OpenAI response
+    console.log("📥 OpenAI response has tool_calls:", 
+      !!(openAIData.choices?.[0]?.message?.tool_calls?.length));
+    if (openAIData.choices?.[0]?.message?.tool_calls) {
+      console.log("📥 Tool calls:", JSON.stringify(openAIData.choices[0].message.tool_calls));
+    }
 
     // Return OpenAI response
     return new Response(

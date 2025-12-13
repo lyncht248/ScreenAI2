@@ -16,6 +16,50 @@ struct BubbleShape: Shape {
     }
 }
 
+// MARK: - Typing Indicator
+struct TypingIndicator: View {
+    @State private var dotOffset: [CGFloat] = [0, 0, 0]
+    
+    var body: some View {
+        HStack(alignment: .bottom, spacing: 8) {
+            HStack(spacing: 4) {
+                ForEach(0..<3, id: \.self) { index in
+                    Circle()
+                        .fill(Color.warmGray.opacity(0.6))
+                        .frame(width: 8, height: 8)
+                        .offset(y: dotOffset[index])
+                }
+            }
+            .padding(.vertical, 14)
+            .padding(.horizontal, 14)
+            .background(
+                BubbleShape(direction: .left)
+                    .fill(Color.oatBubble)
+            )
+            .shadow(color: Color.black.opacity(0.08), radius: 3, x: 0, y: 1)
+            
+            Spacer(minLength: 40)
+        }
+        .padding(.horizontal, 2)
+        .onAppear {
+            startAnimation()
+        }
+    }
+    
+    private func startAnimation() {
+        for i in 0..<3 {
+            withAnimation(
+                Animation
+                    .easeInOut(duration: 0.4)
+                    .repeatForever(autoreverses: true)
+                    .delay(Double(i) * 0.15)
+            ) {
+                dotOffset[i] = -6
+            }
+        }
+    }
+}
+
 struct ChatView: View {
     @StateObject private var viewModel: ChatViewModel
     @State private var showHeader: Bool = false
@@ -29,15 +73,12 @@ struct ChatView: View {
         VStack(spacing: 0) {
             // Person bar (Messages-like header)
             HStack(spacing: 12) {
-                // Avatar (person bubble)
-                ZStack {
-                    Circle()
-                        .fill(Color.oatBubble)
-                        .frame(width: 40, height: 40)
-                    Image(systemName: "person.fill")
-                        .font(.subheadline)
-                        .foregroundStyle(Color.warmGray)
-                }
+                // Nudge avatar
+                Image("NudgeAvatar")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 40, height: 40)
+                    .clipShape(Circle())
                 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Nudge")
@@ -52,7 +93,7 @@ struct ChatView: View {
                 Spacer()
                 
                 // Settings button
-                NavigationLink(destination: SettingsView(blockedStatus: $viewModel.areBadAppsBlocked)) {
+                NavigationLink(destination: SettingsView(blockedStatus: $viewModel.areBadAppsBlocked, onClearConversation: viewModel.clearConversation)) {
                     Image(systemName: "gearshape")
                         .font(.system(size: 20))
                         .foregroundStyle(Color.warmGray)
@@ -72,15 +113,24 @@ struct ChatView: View {
                             messageBubble(for: message)
                                 .id(message.id)
                         }
+                        
+                        // Typing indicator
+                        if isAssistantTyping {
+                            TypingIndicator()
+                                .id("typing-indicator")
+                                .transition(.opacity.combined(with: .scale(scale: 0.8)))
+                        }
                     }
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
+                    .animation(.easeInOut(duration: 0.2), value: isAssistantTyping)
                 }
                 .onChange(of: viewModel.messages) { _ in
-                    if let lastID = viewModel.messages.filter({ $0.role != .system && $0.role != .tool && $0.functionCall == nil }).last?.id {
-                        withAnimation(.easeOut(duration: 0.25)) {
-                            proxy.scrollTo(lastID, anchor: .bottom)
-                        }
+                    scrollToBottom(proxy: proxy)
+                }
+                .onChange(of: isAssistantTyping) { typing in
+                    if typing {
+                        scrollToBottom(proxy: proxy)
                     }
                 }
             }
@@ -131,6 +181,18 @@ struct ChatView: View {
         }
     }
 
+    private func scrollToBottom(proxy: ScrollViewProxy) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            withAnimation(.easeOut(duration: 0.25)) {
+                if isAssistantTyping {
+                    proxy.scrollTo("typing-indicator", anchor: .bottom)
+                } else if let lastID = viewModel.messages.filter({ $0.role != .system && $0.role != .tool && $0.functionCall == nil }).last?.id {
+                    proxy.scrollTo(lastID, anchor: .bottom)
+                }
+            }
+        }
+    }
+    
     @ViewBuilder
     private func messageBubble(for message: ChatMessage) -> some View {
         let isUser = message.role == .user

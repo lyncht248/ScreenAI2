@@ -21,6 +21,27 @@ struct ChatMessagePayload: Encodable {
         case tool_calls = "tool_calls"
         case tool_call_id = "tool_call_id"
     }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(role, forKey: .role)
+        
+        if role == "assistant" && tool_calls != nil && !tool_calls!.isEmpty {
+            // Assistant message with tool calls - content can be null but must be present
+            try container.encode(content, forKey: .content)
+            try container.encode(tool_calls, forKey: .tool_calls)
+        } else if role == "tool" {
+            // Tool result message - requires content and tool_call_id
+            try container.encode(content ?? "", forKey: .content)
+            // tool_call_id is REQUIRED for tool messages
+            if let tcId = tool_call_id, !tcId.isEmpty {
+                try container.encode(tcId, forKey: .tool_call_id)
+            }
+        } else {
+            // Regular messages (user, assistant without tools, system)
+            try container.encodeIfPresent(content, forKey: .content)
+        }
+    }
 }
 
 struct ToolCallPayload: Encodable {
@@ -117,8 +138,10 @@ class OpenAIService: ObservableObject {
         }
         
         // Convert messages to Encodable format
+        print("📨 Converting \(messages.count) messages")
         let messagePayloads: [ChatMessagePayload] = messages.compactMap { msg in
             guard let role = msg["role"] as? String else {
+                print("❌ Message missing role: \(msg)")
                 return nil
             }
             
@@ -154,6 +177,27 @@ class OpenAIService: ObservableObject {
             // Handle tool_call_id
             let toolCallId = msg["tool_call_id"] as? String
             
+            // Validate tool messages - they MUST have a valid tool_call_id
+            if role == "tool" {
+                if toolCallId == nil || toolCallId!.isEmpty {
+                    print("⚠️ Skipping invalid tool message (missing tool_call_id)")
+                    return nil
+                }
+            }
+            
+            // Validate assistant messages with tool_calls
+            if role == "assistant" && toolCalls != nil && !toolCalls!.isEmpty {
+                // Make sure tool_calls have valid IDs
+                let validToolCalls = toolCalls!.filter { !$0.id.isEmpty }
+                if validToolCalls.isEmpty {
+                    print("⚠️ Skipping assistant message with invalid tool_calls")
+                    return nil
+                }
+                toolCalls = validToolCalls
+            }
+            
+            print("📨 ✓ \(role)")
+            
             return ChatMessagePayload(
                 role: role,
                 content: content,
@@ -162,18 +206,65 @@ class OpenAIService: ObservableObject {
             )
         }
         
+        // Validate tool_call/tool_result pairs
+        // Collect all tool_call_ids from assistant messages
+        var toolCallIds = Set<String>()
+        for payload in messagePayloads {
+            if let toolCalls = payload.tool_calls {
+                for tc in toolCalls {
+                    toolCallIds.insert(tc.id)
+                }
+            }
+        }
+        
+        // Filter out tool messages that reference non-existent tool_calls
+        let validatedPayloads = messagePayloads.filter { payload in
+            if payload.role == "tool" {
+                if let tcId = payload.tool_call_id, toolCallIds.contains(tcId) {
+                    return true
+                } else {
+                    print("⚠️ Removing orphaned tool message with id: \(payload.tool_call_id ?? "nil")")
+                    return false
+                }
+            }
+            return true
+        }
+        
+        print("📨 Final message payloads count: \(validatedPayloads.count) (filtered from \(messagePayloads.count))")
+        
         // Convert tools to Encodable format if present
+        print("🔧 Converting \(tools?.count ?? 0) tools")
         let toolPayloads: [ToolPayload]? = tools?.compactMap { tool -> ToolPayload? in
-            guard let type = tool["type"] as? String,
-                  let function = tool["function"] as? [String: Any],
-                  let name = function["name"] as? String,
-                  let description = function["description"] as? String,
-                  let parameters = function["parameters"] as? [String: Any],
-                  let paramType = parameters["type"] as? String,
-                  let properties = parameters["properties"] as? [String: Any],
-                  let required = parameters["required"] as? [String] else {
+            guard let type = tool["type"] as? String else {
+                print("❌ Tool missing 'type'")
                 return nil
             }
+            guard let function = tool["function"] as? [String: Any] else {
+                print("❌ Tool missing 'function'")
+                return nil
+            }
+            guard let name = function["name"] as? String else {
+                print("❌ Tool missing 'function.name'")
+                return nil
+            }
+            guard let description = function["description"] as? String else {
+                print("❌ Tool missing 'function.description'")
+                return nil
+            }
+            guard let parameters = function["parameters"] as? [String: Any] else {
+                print("❌ Tool '\(name)' missing 'function.parameters'")
+                return nil
+            }
+            guard let paramType = parameters["type"] as? String else {
+                print("❌ Tool '\(name)' missing 'parameters.type'")
+                return nil
+            }
+            // Handle empty properties dictionary
+            let properties = (parameters["properties"] as? [String: Any]) ?? [:]
+            // Handle empty required array
+            let required = (parameters["required"] as? [String]) ?? []
+            
+            print("✅ Tool '\(name)' parsed successfully")
             
             var propertyPayloads: [String: ToolPropertyPayload] = [:]
             for (key, propAny) in properties {
@@ -212,8 +303,10 @@ class OpenAIService: ObservableObject {
             )
         }
         
+        print("🔧 Final tool payloads count: \(toolPayloads?.count ?? 0)")
+        
         let requestBody = ChatCompletionRequest(
-            messages: messagePayloads,
+            messages: validatedPayloads,
             model: model,
             temperature: temperature,
             tools: toolPayloads
@@ -222,6 +315,11 @@ class OpenAIService: ObservableObject {
         // Encode to JSON and invoke
         let encoder = JSONEncoder()
         let jsonData = try encoder.encode(requestBody)
+        
+        // Debug: Print the actual JSON being sent
+        if let jsonString = String(data: jsonData, encoding: .utf8) {
+            print("📤 Sending to Edge Function: \(jsonString.prefix(500))...")
+        }
         
         // Call the Edge Function - specify return type explicitly
         let response: AnyJSON = try await supabase.functions.invoke(

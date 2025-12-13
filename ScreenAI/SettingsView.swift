@@ -2,10 +2,14 @@ import SwiftUI
 
 struct SettingsView: View {
     @Binding var blockedStatus: Int
+    var onClearConversation: () async -> Void
+    @Environment(\.dismiss) private var dismiss
     @StateObject private var supabaseService = SupabaseService.shared
     @State private var profile: Profile?
     @State private var isLoading = true
     @State private var isSigningOut = false
+    @State private var isClearingConversation = false
+    @State private var showClearConfirmation = false
     
     var body: some View {
         Form {
@@ -59,6 +63,30 @@ struct SettingsView: View {
             }
             
             Section {
+                Button {
+                    showClearConfirmation = true
+                } label: {
+                    HStack {
+                        if isClearingConversation {
+                            ProgressView()
+                                .tint(.orange)
+                        } else {
+                            Image(systemName: "trash")
+                                .foregroundStyle(.orange)
+                            Text("Clear Conversation")
+                                .foregroundStyle(.orange)
+                        }
+                    }
+                }
+                .disabled(isClearingConversation)
+                .listRowBackground(Color.oatLighter)
+            } header: {
+                Text("Conversation")
+            } footer: {
+                Text("Start fresh with Nudge. This will delete all messages.")
+            }
+            
+            Section {
                 Button(role: .destructive) {
                     Task {
                         await signOut()
@@ -75,6 +103,20 @@ struct SettingsView: View {
                 .disabled(isSigningOut)
                 .listRowBackground(Color.oatLighter)
             }
+        }
+        .confirmationDialog(
+            "Clear Conversation",
+            isPresented: $showClearConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Clear All Messages", role: .destructive) {
+                Task {
+                    await clearConversation()
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This will delete your entire conversation history with Nudge. This cannot be undone.")
         }
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.inline)
@@ -106,10 +148,18 @@ struct SettingsView: View {
             print("Error signing out: \(error)")
         }
     }
+    
+    private func clearConversation() async {
+        isClearingConversation = true
+        defer { isClearingConversation = false }
+        
+        await onClearConversation()
+        dismiss()
+    }
 }
 
 #Preview {
     NavigationStack {
-        SettingsView(blockedStatus: .constant(1))
+        SettingsView(blockedStatus: .constant(1), onClearConversation: {})
     }
 }
