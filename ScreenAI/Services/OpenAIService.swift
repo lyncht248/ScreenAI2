@@ -12,7 +12,26 @@ struct ChatCompletionRequest: Encodable {
 
 struct ChatMessagePayload: Encodable {
     let role: String
-    let content: String
+    let content: String?
+    let tool_calls: [ToolCallPayload]?
+    let tool_call_id: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case role, content
+        case tool_calls = "tool_calls"
+        case tool_call_id = "tool_call_id"
+    }
+}
+
+struct ToolCallPayload: Encodable {
+    let id: String
+    let type: String
+    let function: ToolCallFunctionPayload
+}
+
+struct ToolCallFunctionPayload: Encodable {
+    let name: String
+    let arguments: String
 }
 
 struct ToolPayload: Encodable {
@@ -35,6 +54,12 @@ struct ToolParametersPayload: Encodable {
 struct ToolPropertyPayload: Encodable {
     let type: String
     let description: String
+    let enum_values: [Int]?
+    
+    enum CodingKeys: String, CodingKey {
+        case type, description
+        case enum_values = "enum"
+    }
 }
 
 /// Service for proxying OpenAI API requests through Supabase Edge Function
@@ -93,11 +118,48 @@ class OpenAIService: ObservableObject {
         
         // Convert messages to Encodable format
         let messagePayloads: [ChatMessagePayload] = messages.compactMap { msg in
-            guard let role = msg["role"] as? String,
-                  let content = msg["content"] as? String else {
+            guard let role = msg["role"] as? String else {
                 return nil
             }
-            return ChatMessagePayload(role: role, content: content)
+            
+            // Handle content (can be String, NSNull, or nil)
+            var content: String? = nil
+            if let contentValue = msg["content"] {
+                if let stringContent = contentValue as? String {
+                    content = stringContent.isEmpty ? nil : stringContent
+                } else if contentValue is NSNull {
+                    content = nil
+                }
+            }
+            
+            // Handle tool_calls
+            var toolCalls: [ToolCallPayload]? = nil
+            if let toolCallsArray = msg["tool_calls"] as? [[String: Any]] {
+                toolCalls = toolCallsArray.compactMap { toolCallDict -> ToolCallPayload? in
+                    guard let id = toolCallDict["id"] as? String,
+                          let type = toolCallDict["type"] as? String,
+                          let functionDict = toolCallDict["function"] as? [String: Any],
+                          let functionName = functionDict["name"] as? String,
+                          let functionArgs = functionDict["arguments"] as? String else {
+                        return nil
+                    }
+                    return ToolCallPayload(
+                        id: id,
+                        type: type,
+                        function: ToolCallFunctionPayload(name: functionName, arguments: functionArgs)
+                    )
+                }
+            }
+            
+            // Handle tool_call_id
+            let toolCallId = msg["tool_call_id"] as? String
+            
+            return ChatMessagePayload(
+                role: role,
+                content: content,
+                tool_calls: toolCalls?.isEmpty == false ? toolCalls : nil,
+                tool_call_id: toolCallId
+            )
         }
         
         // Convert tools to Encodable format if present
@@ -108,17 +170,32 @@ class OpenAIService: ObservableObject {
                   let description = function["description"] as? String,
                   let parameters = function["parameters"] as? [String: Any],
                   let paramType = parameters["type"] as? String,
-                  let properties = parameters["properties"] as? [String: [String: String]],
+                  let properties = parameters["properties"] as? [String: Any],
                   let required = parameters["required"] as? [String] else {
                 return nil
             }
             
             var propertyPayloads: [String: ToolPropertyPayload] = [:]
-            for (key, prop) in properties {
-                if let propType = prop["type"],
-                   let propDesc = prop["description"] {
-                    propertyPayloads[key] = ToolPropertyPayload(type: propType, description: propDesc)
+            for (key, propAny) in properties {
+                guard let prop = propAny as? [String: Any],
+                      let propType = prop["type"] as? String,
+                      let propDesc = prop["description"] as? String else {
+                    continue
                 }
+                
+                // Handle enum (array of integers)
+                var enumValues: [Int]? = nil
+                if let enumArray = prop["enum"] as? [Int] {
+                    enumValues = enumArray
+                } else if let enumArrayAny = prop["enum"] as? [Any] {
+                    enumValues = enumArrayAny.compactMap { $0 as? Int }
+                }
+                
+                propertyPayloads[key] = ToolPropertyPayload(
+                    type: propType,
+                    description: propDesc,
+                    enum_values: enumValues
+                )
             }
             
             return ToolPayload(

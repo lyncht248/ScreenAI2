@@ -154,6 +154,85 @@ class ChatService: ObservableObject {
             .eq("id", value: id.uuidString)
             .execute()
     }
+    
+    /// Update conversation metadata
+    func updateConversationMetadata(id: UUID, metadata: [String: Any]) async throws {
+        // Get current metadata and merge
+        let conversation = try await getConversation(id: id)
+        var currentMetadata = (conversation.metadata?.compactMapValues { value -> Any? in
+            switch value {
+            case .null: return nil
+            case .bool(let v): return v
+            case .integer(let v): return v
+            case .double(let v): return v
+            case .string(let v): return v
+            case .array(let arr): return arr.map { convertAnyJSONToAny($0) }
+            case .object(let dict):
+                var result: [String: Any] = [:]
+                for (key, val) in dict {
+                    result[key] = convertAnyJSONToAny(val)
+                }
+                return result
+            }
+        }) ?? [:]
+        
+        // Merge new metadata
+        for (key, value) in metadata {
+            currentMetadata[key] = value
+        }
+        
+        // Convert back to AnyJSON
+        var metadataJSON: [String: AnyJSON] = [:]
+        for (key, value) in currentMetadata {
+            metadataJSON[key] = convertAnyToAnyJSON(value)
+        }
+        
+        try await supabase
+            .from("conversations")
+            .update(["metadata": metadataJSON])
+            .eq("id", value: id.uuidString)
+            .execute()
+    }
+    
+    // Helper to convert Any to AnyJSON
+    private func convertAnyToAnyJSON(_ value: Any) -> AnyJSON {
+        if let bool = value as? Bool {
+            return .bool(bool)
+        } else if let int = value as? Int {
+            return .integer(int)
+        } else if let double = value as? Double {
+            return .double(double)
+        } else if let string = value as? String {
+            return .string(string)
+        } else if let array = value as? [Any] {
+            return .array(array.map { convertAnyToAnyJSON($0) })
+        } else if let dict = value as? [String: Any] {
+            var result: [String: AnyJSON] = [:]
+            for (key, val) in dict {
+                result[key] = convertAnyToAnyJSON(val)
+            }
+            return .object(result)
+        }
+        return .null
+    }
+    
+    // Helper to convert AnyJSON to Any
+    private func convertAnyJSONToAny(_ json: AnyJSON) -> Any {
+        switch json {
+        case .null: return NSNull()
+        case .bool(let value): return value
+        case .integer(let value): return value
+        case .double(let value): return value
+        case .string(let value): return value
+        case .array(let arr): return arr.map { convertAnyJSONToAny($0) }
+        case .object(let dict):
+            var result: [String: Any] = [:]
+            for (key, value) in dict {
+                result[key] = convertAnyJSONToAny(value)
+            }
+            return result
+        }
+    }
 }
 
 enum ChatServiceError: LocalizedError {
