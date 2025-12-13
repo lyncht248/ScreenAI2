@@ -2,31 +2,153 @@ import Foundation
 
 @MainActor
 final class ChatViewModel: ObservableObject {
-    @Published var messages: [ChatMessage] = [
-        ChatMessage(role: .system, content: "You are nudge, a friendly, slightly-sassy screen-time companion inside the app \"screen ai\". You help the user stay focused and avoid mindless scrolling. speak in text messages. short, casual, mostly (but NOT always) lowercase sentences. be playful and supportive, sometimes sassy. when the user hits their limit, pause access and ask gentle, reflective questions (like \"what are you hoping to get from this?\"). if they ask for more time, get their reason first: grant small extensions for legit needs (work, deadlines, mental health), but push back playfully on impulse wants. offer small time chunks like \"ok, 10 mins. don't waste it.\" keep boundaries but stay cute about it. never give medical, legal, or financial advice. always prioritize the user's long-term goals over the immediate urge to scroll. You can check if bad apps are blocked using get_blocked_status, and block or unblock them using set_blocked_status. Always call get_blocked_status before telling the user about the current blocking state."),
-        ChatMessage(role: .assistant, content: "hey there, i'm Nudge. what's your name?")
-    ]
+    @Published var messages: [ChatMessage] = []
     @Published var inputText = ""
     @Published var isSending = false
     @Published var errorMessage: String?
     
     // Track blocked status (1 = blocked, 0 = not blocked)
     @Published var areBadAppsBlocked: Int = 0
-
-    // Replace with your secure key handling in production.
-    private let apiKey: String
+    
+    // Current conversation ID
+    private var conversationId: UUID?
+    
+    // Services
+    private let chatService = ChatService()
+    private let openAIService = OpenAIService()
     private let model: String
+    
+    // System message (stored separately, not saved to DB)
+    private let systemMessage = ChatMessage(role: .system, content: "You are nudge, a friendly, slightly-sassy screen-time companion inside the app \"screen ai\". You help the user stay focused and avoid mindless scrolling. speak in text messages. short, casual, mostly (but NOT always) lowercase sentences. be playful and supportive, sometimes sassy. when the user hits their limit, pause access and ask gentle, reflective questions (like \"what are you hoping to get from this?\"). if they ask for more time, get their reason first: grant small extensions for legit needs (work, deadlines, mental health), but push back playfully on impulse wants. offer small time chunks like \"ok, 10 mins. don't waste it.\" keep boundaries but stay cute about it. never give medical, legal, or financial advice. always prioritize the user's long-term goals over the immediate urge to scroll. You can check if bad apps are blocked using get_blocked_status, and block or unblock them using set_blocked_status. Always call get_blocked_status before telling the user about the current blocking state.")
+    
+    // Initial greeting
+    private let initialGreeting = ChatMessage(role: .assistant, content: "hey there, i'm Nudge. what's your name?")
 
-    init(apiKey: String, model: String = "gpt-4o-mini") {
-        self.apiKey = apiKey
+    init(model: String = "gpt-4o-mini") {
         self.model = model
+        // Initialize with system message and greeting for display
+        self.messages = [systemMessage, initialGreeting]
+        
+        // Load or create conversation
+        Task {
+            await loadOrCreateConversation()
+        }
+    }
+    
+    /// Load existing conversation or create a new one
+    private func loadOrCreateConversation() async {
+        guard SupabaseService.shared.isAuthenticated else {
+            // If not authenticated, just use local messages (will be saved after auth)
+            return
+        }
+        
+        do {
+            // Try to get the most recent conversation
+            let conversations = try await chatService.getConversations()
+            
+            if let latestConversation = conversations.first {
+                // Load messages from existing conversation
+                conversationId = latestConversation.id
+                let dbMessages = try await chatService.getMessages(conversationId: latestConversation.id)
+                
+                // Convert database messages to ChatMessage format
+                var loadedMessages: [ChatMessage] = [systemMessage]
+                for dbMsg in dbMessages {
+                    // Convert function_call JSONB to ChatMessage.FunctionCall
+                    var functionCall: ChatMessage.FunctionCall? = nil
+                    if let functionCallDict = dbMsg.functionCall {
+                        // Extract name and arguments from the JSONB dictionary
+                        var name = ""
+                        var arguments = ""
+                        
+                        for (key, value) in functionCallDict {
+                            if key == "name", case .string(let str) = value {
+                                name = str
+                            } else if key == "arguments", case .string(let str) = value {
+                                arguments = str
+                            }
+                        }
+                        
+                        if !name.isEmpty && !arguments.isEmpty {
+                            functionCall = ChatMessage.FunctionCall(name: name, arguments: arguments)
+                        }
+                    }
+                    
+                    let chatMsg = ChatMessage(
+                        role: ChatMessage.Role(rawValue: dbMsg.role) ?? .user,
+                        content: dbMsg.content,
+                        functionCall: functionCall,
+                        functionName: dbMsg.functionName
+                    )
+                    loadedMessages.append(chatMsg)
+                }
+                
+                // If no messages, add initial greeting
+                if loadedMessages.count == 1 {
+                    loadedMessages.append(initialGreeting)
+                }
+                
+                self.messages = loadedMessages
+            } else {
+                // Create new conversation
+                conversationId = try await chatService.createConversation()
+                
+                // Save initial greeting
+                if let convId = conversationId {
+                    _ = try await chatService.saveMessage(
+                        conversationId: convId,
+                        role: initialGreeting.role.rawValue,
+                        content: initialGreeting.content,
+                        sequenceOrder: messages.count
+                    )
+                }
+            }
+        } catch {
+            print("Error loading conversation: \(error)")
+            // Continue with local messages if loading fails
+        }
     }
 
     func sendCurrentInput() async {
         let text = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
+        
+        // Check authentication
+        guard SupabaseService.shared.isAuthenticated else {
+            errorMessage = "Please sign in to send messages"
+            return
+        }
+        
+        // Ensure we have a conversation
+        if conversationId == nil {
+            do {
+                conversationId = try await chatService.createConversation()
+            } catch {
+                errorMessage = "Failed to create conversation: \(error.localizedDescription)"
+                return
+            }
+        }
+        
         inputText = ""
-        messages.append(ChatMessage(role: .user, content: text))
+        let userMessage = ChatMessage(role: .user, content: text)
+        messages.append(userMessage)
+        
+        // Save user message to database
+        if let convId = conversationId {
+            let sequenceOrder = messages.filter { $0.role != .system }.count - 1
+            do {
+                _ = try await chatService.saveMessage(
+                    conversationId: convId,
+                    role: userMessage.role.rawValue,
+                    content: userMessage.content,
+                    sequenceOrder: sequenceOrder
+                )
+            } catch {
+                print("Warning: Failed to save user message: \(error)")
+                // Continue even if save fails
+            }
+        }
+        
         await completeChat()
     }
     
@@ -89,17 +211,7 @@ final class ChatViewModel: ObservableObject {
         errorMessage = nil
         defer { isSending = false }
 
-        guard let url = URL(string: "https://api.openai.com/v1/chat/completions") else {
-            errorMessage = "Invalid API URL."
-            return
-        }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-        // Convert messages to API format
+        // Convert messages to API format (including system message)
         var payloadMessages: [[String: Any]] = []
         for msg in messages {
             var message: [String: Any] = ["role": msg.role.rawValue]
@@ -133,96 +245,109 @@ final class ChatViewModel: ObservableObject {
             payloadMessages.append(message)
         }
 
-        let body: [String: Any] = [
-            "model": model,
-            "messages": payloadMessages,
-            "temperature": 0.7,
-            "tools": toolDefinitions
-        ]
-
         do {
-            request.httpBody = try JSONSerialization.data(withJSONObject: body, options: [])
-
-            let (data, response) = try await URLSession.shared.data(for: request)
-            guard let http = response as? HTTPURLResponse else {
-                errorMessage = "No HTTP response."
-                return
-            }
-            guard (200..<300).contains(http.statusCode) else {
-                errorMessage = String(data: data, encoding: .utf8) ?? "Unknown API error."
-                return
-            }
-
-            struct Choice: Decodable {
-                struct Message: Decodable {
-                    let role: String
-                    let content: String?
-                    let toolCalls: [ToolCall]?
-                    
-                    enum CodingKeys: String, CodingKey {
-                        case role, content
-                        case toolCalls = "tool_calls"
-                    }
-                    
-                    struct ToolCall: Decodable {
-                        let id: String
-                        let type: String
-                        let function: FunctionCall
-                        
-                        struct FunctionCall: Decodable {
-                            let name: String
-                            let arguments: String
-                        }
-                    }
-                }
-                let message: Message
-                let finishReason: String?
-                
-                enum CodingKeys: String, CodingKey {
-                    case message
-                    case finishReason = "finish_reason"
-                }
-            }
-            struct CompletionResponse: Decodable {
-                let choices: [Choice]
-            }
-
-            let decoded = try JSONDecoder().decode(CompletionResponse.self, from: data)
-            guard let first = decoded.choices.first else {
-                messages.append(ChatMessage(role: .assistant, content: "No response."))
+            // Call OpenAI via Edge Function proxy
+            let response = try await openAIService.completeChat(
+                messages: payloadMessages,
+                model: model,
+                temperature: 0.7,
+                tools: toolDefinitions
+            )
+            
+            // Parse response
+            guard let choices = response["choices"] as? [[String: Any]],
+                  let firstChoice = choices.first,
+                  let messageDict = firstChoice["message"] as? [String: Any],
+                  let role = messageDict["role"] as? String else {
+                errorMessage = "Invalid response format"
                 return
             }
             
-            let responseMessage = first.message
+            let content = messageDict["content"] as? String
+            let toolCallsArray = messageDict["tool_calls"] as? [[String: Any]]
             
             // Check if this is a tool call
-            if let toolCalls = responseMessage.toolCalls, !toolCalls.isEmpty {
-                // Add the assistant message with tool calls
+            if let toolCalls = toolCallsArray, !toolCalls.isEmpty,
+               let firstToolCall = toolCalls.first,
+               let toolCallId = firstToolCall["id"] as? String,
+               let functionDict = firstToolCall["function"] as? [String: Any],
+               let functionName = functionDict["name"] as? String,
+               let functionArgs = functionDict["arguments"] as? String {
+                
+                // Add the tool call to messages
                 let toolCallMessage = ChatMessage(
                     role: .assistant,
-                    content: responseMessage.content ?? "",
+                    content: content ?? "",
                     functionCall: ChatMessage.FunctionCall(
-                        name: toolCalls[0].function.name,
-                        arguments: toolCalls[0].function.arguments
+                        name: functionName,
+                        arguments: functionArgs
                     ),
-                    functionName: toolCalls[0].id // Store the tool_call_id
+                    functionName: toolCallId // Store the tool_call_id
                 )
                 messages.append(toolCallMessage)
                 
+                // Save tool call message to database
+                if let convId = conversationId {
+                    let sequenceOrder = messages.filter { $0.role != .system }.count - 1
+                    _ = try? await chatService.saveMessage(
+                        conversationId: convId,
+                        role: toolCallMessage.role.rawValue,
+                        content: toolCallMessage.content,
+                        functionCall: ["name": functionName, "arguments": functionArgs],
+                        sequenceOrder: sequenceOrder
+                    )
+                }
+                
                 // Execute each tool call
                 for toolCall in toolCalls {
-                    let functionResult = executeFunction(name: toolCall.function.name, arguments: toolCall.function.arguments)
+                    guard let tcId = toolCall["id"] as? String,
+                          let tcFunc = toolCall["function"] as? [String: Any],
+                          let tcName = tcFunc["name"] as? String,
+                          let tcArgs = tcFunc["arguments"] as? String else { continue }
+                    
+                    let functionResult = executeFunction(name: tcName, arguments: tcArgs)
                     
                     // Add tool result message (role: "tool", with tool_call_id)
-                    messages.append(ChatMessage(role: .tool, content: functionResult, functionName: toolCall.id))
+                    let toolResultMessage = ChatMessage(role: .tool, content: functionResult, functionName: tcId)
+                    messages.append(toolResultMessage)
+                    
+                    // Save tool result to database
+                    if let convId = conversationId {
+                        let sequenceOrder = messages.filter { $0.role != .system }.count - 1
+                        _ = try? await chatService.saveMessage(
+                            conversationId: convId,
+                            role: toolResultMessage.role.rawValue,
+                            content: toolResultMessage.content,
+                            functionName: tcName,
+                            sequenceOrder: sequenceOrder
+                        )
+                    }
                 }
                 
                 // Continue the conversation with the tool results
                 await completeChat()
             } else {
                 // Regular text response
-                let content = responseMessage.content ?? "No response."
-                messages.append(ChatMessage(role: .assistant, content: content))
+                let assistantMessage = ChatMessage(
+                    role: .assistant,
+                    content: content ?? "No response."
+                )
+                messages.append(assistantMessage)
+                
+                // Save assistant message to database
+                if let convId = conversationId {
+                    let sequenceOrder = messages.filter { $0.role != .system }.count - 1
+                    do {
+                        _ = try await chatService.saveMessage(
+                            conversationId: convId,
+                            role: assistantMessage.role.rawValue,
+                            content: assistantMessage.content,
+                            sequenceOrder: sequenceOrder
+                        )
+                    } catch {
+                        print("Warning: Failed to save assistant message: \(error)")
+                    }
+                }
             }
         } catch {
             errorMessage = "Request failed: \(error.localizedDescription)"

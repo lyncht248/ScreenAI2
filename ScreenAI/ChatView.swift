@@ -28,8 +28,8 @@ struct ChatView: View {
     @State private var showHeader: Bool = false
     @State private var isAssistantTyping: Bool = false
 
-    init(apiKey: String, model: String = "gpt-4o-mini") {
-        _viewModel = StateObject(wrappedValue: ChatViewModel(apiKey: apiKey, model: model))
+    init(model: String = "gpt-4o-mini") {
+        _viewModel = StateObject(wrappedValue: ChatViewModel(model: model))
     }
 
     var body: some View {
@@ -177,6 +177,6 @@ struct ChatView: View {
 
 #Preview {
     NavigationStack {
-        ChatView(apiKey: "YOUR_OPENAI_API_KEY")
+        ChatView()
     }
 }
