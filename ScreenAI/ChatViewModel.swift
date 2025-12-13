@@ -89,6 +89,22 @@ final class ChatViewModel: ObservableObject {
                 }
                 
                 self.messages = loadedMessages
+                
+                // Load blocked status from conversation metadata
+                if let metadata = latestConversation.metadata {
+                    // Extract blocked_status from AnyJSON
+                    for (key, value) in metadata {
+                        if key == "blocked_status" {
+                            if case .integer(let blocked) = value {
+                                self.areBadAppsBlocked = blocked
+                            } else if case .string(let blockedStr) = value,
+                                      let blocked = Int(blockedStr) {
+                                self.areBadAppsBlocked = blocked
+                            }
+                            break
+                        }
+                    }
+                }
             } else {
                 // Create new conversation
                 conversationId = try await chatService.createConversation()
@@ -198,6 +214,21 @@ final class ChatViewModel: ObservableObject {
                let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                let blocked = json["blocked"] as? Int {
                 areBadAppsBlocked = blocked
+                
+                // Persist blocked status to conversation metadata
+                if let convId = conversationId {
+                    Task {
+                        do {
+                            try await chatService.updateConversationMetadata(
+                                id: convId,
+                                metadata: ["blocked_status": blocked]
+                            )
+                        } catch {
+                            print("Warning: Failed to save blocked status: \(error)")
+                        }
+                    }
+                }
+                
                 return "{\"status\": \"success\", \"blocked\": \(blocked)}"
             }
             return "{\"status\": \"error\", \"message\": \"Invalid arguments\"}"
@@ -354,3 +385,5 @@ final class ChatViewModel: ObservableObject {
         }
     }
 }
+
+

@@ -10,16 +10,26 @@ const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 interface RequestBody {
   messages: Array<{
     role: string;
-    content?: string;
+    content?: string | null;
     function_call?: {
       name: string;
       arguments: string;
     };
+    tool_calls?: Array<{
+      id: string;
+      type: string;
+      function: {
+        name: string;
+        arguments: string;
+      };
+    }>;
+    tool_call_id?: string;
     name?: string;
   }>;
   model?: string;
   temperature?: number;
   functions?: Array<Record<string, unknown>>;
+  tools?: Array<Record<string, unknown>>;
 }
 
 serve(async (req) => {
@@ -101,12 +111,18 @@ serve(async (req) => {
     }
 
     // Prepare OpenAI request
-    const openAIRequest = {
+    const openAIRequest: any = {
       model: requestBody.model || "gpt-4o-mini",
       messages: requestBody.messages,
       temperature: requestBody.temperature ?? 0.7,
-      ...(requestBody.functions && { functions: requestBody.functions }),
     };
+    
+    // Support both tools (newer API) and functions (legacy)
+    if (requestBody.tools) {
+      openAIRequest.tools = requestBody.tools;
+    } else if (requestBody.functions) {
+      openAIRequest.functions = requestBody.functions;
+    }
 
     // Call OpenAI API
     const openAIResponse = await fetch(OPENAI_API_URL, {
