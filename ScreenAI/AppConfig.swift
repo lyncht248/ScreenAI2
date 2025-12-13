@@ -32,6 +32,36 @@ struct AppConfig {
 
     /// Default OpenAI chat model. You can change this centrally.
     static let openAIModel: String = "gpt-4o-mini"
+    
+    /// Supabase project URL
+    static var supabaseURL: String {
+        if let url = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_URL") as? String, !url.isEmpty {
+            return url
+        }
+        if let envURL = ProcessInfo.processInfo.environment["SUPABASE_URL"], !envURL.isEmpty {
+            return envURL
+        }
+        #if DEBUG
+        fatalError("Missing Supabase URL. Add SUPABASE_URL to Info.plist or environment variables.")
+        #else
+        return ""
+        #endif
+    }
+    
+    /// Supabase anon/public key
+    static var supabaseAnonKey: String {
+        if let key = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_ANON_KEY") as? String, !key.isEmpty {
+            return key
+        }
+        if let envKey = ProcessInfo.processInfo.environment["SUPABASE_ANON_KEY"], !envKey.isEmpty {
+            return envKey
+        }
+        #if DEBUG
+        fatalError("Missing Supabase anon key. Add SUPABASE_ANON_KEY to Info.plist or environment variables.")
+        #else
+        return ""
+        #endif
+    }
 
     // Masks a secret for debug logging (shows first/last 4 characters).
     private static func mask(_ value: String) -> String {
