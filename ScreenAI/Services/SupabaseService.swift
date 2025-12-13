@@ -13,8 +13,23 @@ class SupabaseService: ObservableObject {
     
     private init() {
         // Initialize Supabase client
+        let urlString = AppConfig.supabaseURL
+        #if DEBUG
+        print("[SupabaseService] URL string: '\(urlString)'")
+        print("[SupabaseService] URL string length: \(urlString.count)")
+        if let url = URL(string: urlString) {
+            print("[SupabaseService] Parsed URL host: \(url.host ?? "nil")")
+        } else {
+            print("[SupabaseService] Failed to parse URL!")
+        }
+        #endif
+        
+        guard let supabaseURL = URL(string: urlString), supabaseURL.host != nil else {
+            fatalError("Invalid Supabase URL: '\(urlString)'. Make sure SUPABASE_URL is set correctly in Secrets.xcconfig")
+        }
+        
         client = SupabaseClient(
-            supabaseURL: URL(string: AppConfig.supabaseURL)!,
+            supabaseURL: supabaseURL,
             supabaseKey: AppConfig.supabaseAnonKey
         )
         

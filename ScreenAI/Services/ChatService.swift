@@ -1,6 +1,23 @@
 import Foundation
 import Supabase
 
+// MARK: - Insert Models (for Supabase inserts)
+
+private struct ConversationInsert: Codable {
+    let user_id: String
+    let title: String?
+    let metadata: [String: String]?
+}
+
+private struct MessageInsert: Codable {
+    let conversation_id: String
+    let role: String
+    let content: String
+    let function_call: [String: String]?
+    let function_name: String?
+    let sequence_order: Int
+}
+
 /// Service for managing chat conversations and messages
 @MainActor
 class ChatService: ObservableObject {
@@ -12,13 +29,15 @@ class ChatService: ObservableObject {
             throw ChatServiceError.notAuthenticated
         }
         
+        let insertData = ConversationInsert(
+            user_id: userId.uuidString,
+            title: title,
+            metadata: nil
+        )
+        
         let newConversation: Conversation = try await supabase
             .from("conversations")
-            .insert([
-                "user_id": userId.uuidString,
-                "title": title as Any,
-                "metadata": [:] as [String: AnyJSON]
-            ])
+            .insert(insertData)
             .select()
             .single()
             .execute()
@@ -75,29 +94,22 @@ class ChatService: ObservableObject {
         conversationId: UUID,
         role: String,
         content: String,
-        functionCall: [String: Any]? = nil,
+        functionCall: [String: String]? = nil,
         functionName: String? = nil,
         sequenceOrder: Int
     ) async throws -> Message {
-        var messageData: [String: Any] = [
-            "conversation_id": conversationId.uuidString,
-            "role": role,
-            "content": content,
-            "sequence_order": sequenceOrder
-        ]
-        
-        if let functionCall = functionCall {
-            // Store function_call as JSONB - Supabase will handle conversion
-            messageData["function_call"] = functionCall
-        }
-        
-        if let functionName = functionName {
-            messageData["function_name"] = functionName
-        }
+        let insertData = MessageInsert(
+            conversation_id: conversationId.uuidString,
+            role: role,
+            content: content,
+            function_call: functionCall,
+            function_name: functionName,
+            sequence_order: sequenceOrder
+        )
         
         let message: Message = try await supabase
             .from("messages")
-            .insert(messageData)
+            .insert(insertData)
             .select()
             .single()
             .execute()
@@ -107,31 +119,16 @@ class ChatService: ObservableObject {
     }
     
     /// Save multiple messages in a batch
-    func saveMessages(_ messages: [(role: String, content: String, functionCall: [String: Any]?, functionName: String?, sequenceOrder: Int)], to conversationId: UUID) async throws {
-        guard let userId = SupabaseService.shared.currentUser?.id else {
-            throw ChatServiceError.notAuthenticated
-        }
-        
-        var messageDataArray: [[String: Any]] = []
-        
-        for (index, msg) in messages.enumerated() {
-            var messageData: [String: Any] = [
-                "conversation_id": conversationId.uuidString,
-                "role": msg.role,
-                "content": msg.content,
-                "sequence_order": msg.sequenceOrder
-            ]
-            
-            if let functionCall = msg.functionCall {
-                // Store function_call as JSONB - Supabase will handle conversion
-                messageData["function_call"] = functionCall
-            }
-            
-            if let functionName = msg.functionName {
-                messageData["function_name"] = functionName
-            }
-            
-            messageDataArray.append(messageData)
+    func saveMessages(_ messages: [(role: String, content: String, functionCall: [String: String]?, functionName: String?, sequenceOrder: Int)], to conversationId: UUID) async throws {
+        let messageDataArray = messages.map { msg in
+            MessageInsert(
+                conversation_id: conversationId.uuidString,
+                role: msg.role,
+                content: msg.content,
+                function_call: msg.functionCall,
+                function_name: msg.functionName,
+                sequence_order: msg.sequenceOrder
+            )
         }
         
         try await supabase

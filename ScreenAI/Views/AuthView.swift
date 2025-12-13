@@ -84,6 +84,21 @@ struct AuthView: View {
                         .font(.caption)
                         .foregroundStyle(.blue)
                 }
+                
+                #if DEBUG
+                Divider()
+                    .padding(.vertical, 8)
+                
+                Button {
+                    Task {
+                        await devLogin()
+                    }
+                } label: {
+                    Text("🧪 Dev Login (Skip Auth)")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                }
+                #endif
             }
             .padding(.horizontal, 32)
             
@@ -92,6 +107,31 @@ struct AuthView: View {
         .padding()
         .background(Color(.systemGroupedBackground))
     }
+    
+    #if DEBUG
+    /// Quick dev login - creates or signs into a test account
+    private func devLogin() async {
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+        
+        let devEmail = "dev@test.local"
+        let devPassword = "devpassword123"
+        let devUsername = "DevUser"
+        
+        do {
+            // Try to sign in first
+            _ = try await supabaseService.signIn(email: devEmail, password: devPassword)
+        } catch {
+            // If sign in fails, try to sign up
+            do {
+                _ = try await supabaseService.signUp(email: devEmail, password: devPassword, username: devUsername)
+            } catch {
+                errorMessage = "Dev login failed: \(error.localizedDescription)"
+            }
+        }
+    }
+    #endif
     
     private func handleAuth() async {
         isLoading = true

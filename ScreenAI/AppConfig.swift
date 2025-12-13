@@ -35,6 +35,10 @@ struct AppConfig {
     
     /// Supabase project URL
     static var supabaseURL: String {
+        #if DEBUG
+        print("[AppConfig] Info SUPABASE_URL raw:", Bundle.main.object(forInfoDictionaryKey: "SUPABASE_URL") as Any)
+        print("[AppConfig] Env SUPABASE_URL:", ProcessInfo.processInfo.environment["SUPABASE_URL"] ?? "nil")
+        #endif
         if let url = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_URL") as? String, !url.isEmpty {
             return url
         }
@@ -50,6 +54,9 @@ struct AppConfig {
     
     /// Supabase anon/public key
     static var supabaseAnonKey: String {
+        #if DEBUG
+        print("[AppConfig] Info SUPABASE_ANON_KEY raw:", (Bundle.main.object(forInfoDictionaryKey: "SUPABASE_ANON_KEY") as? String).map { mask($0) } ?? "nil")
+        #endif
         if let key = Bundle.main.object(forInfoDictionaryKey: "SUPABASE_ANON_KEY") as? String, !key.isEmpty {
             return key
         }
